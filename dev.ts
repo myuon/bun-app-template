@@ -4,27 +4,21 @@ import { watch } from "fs";
 process.env.NODE_ENV = "development";
 
 const startViteServer = () => {
-  const viteServer = Bun.spawn(["bun", "dev"], {
+  return Bun.spawn(["bun", "dev"], {
     cwd: "./web",
   });
-
-  console.log(`vite dev server has started`);
-
-  return viteServer;
 };
 
 const startBunServer = () => {
-  const bunServer = Bun.spawn(["bun", "index.ts"], {
+  return Bun.spawn(["bun", "index.ts"], {
     stdout: "inherit",
   });
-
-  console.log(`bun server has been started`);
-
-  return bunServer;
 };
 
 const viteServer = startViteServer();
 let bunServer = startBunServer();
+
+console.log(`devServers started`);
 
 const watcher = watch(
   import.meta.dir,
