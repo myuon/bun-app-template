@@ -1,5 +1,7 @@
 import { echoHandler } from "./api/echo";
 
+const isDev = process.env.NODE_ENV === "development";
+
 const devServerIntegration = `
 <!-- 開発環境 -->
 <script type="module">
@@ -30,7 +32,7 @@ const insertBeforeBodyEnd = (html: string, content: string) => {
 };
 
 const server = Bun.serve({
-  port: 3000,
+  port: isDev ? 3000 : 3999,
   async fetch(req) {
     const path = new URL(req.url).pathname;
     if (path.startsWith("/api")) {
@@ -42,20 +44,29 @@ const server = Bun.serve({
       }
     }
 
-    if (path === "/") {
-      return new Response(insertBeforeBodyEnd(html, devServerIntegration), {
+    if (isDev) {
+      if (path === "/") {
+        return new Response(insertBeforeBodyEnd(html, devServerIntegration), {
+          headers: {
+            "content-type": "text/html",
+          },
+        });
+      }
+
+      return new Response(null, {
+        status: 301,
         headers: {
-          "content-type": "text/html",
+          location: `http://localhost:5173${path}`,
         },
       });
-    }
+    } else {
+      const file = Bun.file(`./web/dist${path === "/" ? "/index.html" : path}`);
+      if (!file.exists()) {
+        return new Response("Not found", { status: 404 });
+      }
 
-    return new Response(null, {
-      status: 301,
-      headers: {
-        location: `http://localhost:5173${path}`,
-      },
-    });
+      return new Response(file);
+    }
   },
 });
 

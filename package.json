@@ -9,6 +9,7 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "dev": "bun dev.ts"
+    "dev": "bun dev.ts",
+    "build": "bun build.ts"
   }
 }
