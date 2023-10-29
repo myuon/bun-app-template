@@ -1,3 +1,6 @@
+import process from "process";
+process.env.NODE_ENV = "development";
+
 const viteServer = Bun.spawn(["bun", "dev"], {
   cwd: "./web",
 });
