@@ -1,10 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 
+const useEcho = () => {
+  const [data, setData] = useState<unknown>();
+  useEffect(() => {
+    (async () => {
+      const resp = await fetch("/api/echo/foobar");
+      if (resp.ok) {
+        const json = await resp.json();
+        setData(json);
+      }
+    })();
+  }, []);
+
+  return { data };
+};
+
 function App() {
   const [count, setCount] = useState(0);
+  const { data } = useEcho();
 
   return (
     <>
@@ -17,6 +33,13 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
+      <pre
+        style={{
+          textAlign: "left",
+        }}
+      >
+        <code>{JSON.stringify(data, null, 2)}</code>
+      </pre>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
