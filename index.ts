@@ -1,12 +1,7 @@
+import { echoHandler } from "./api/echo";
+
 const devServerIntegration = `
 <!-- 開発環境 -->
-<script type="module">
-  import RefreshRuntime from 'http://localhost:5173/@react-refresh'
-  RefreshRuntime.injectIntoGlobalHook(window)
-  window.$RefreshReg$ = () => {}
-  window.$RefreshSig$ = () => (type) => type
-  window.__vite_plugin_react_preamble_installed__ = true
-</script>
 <script type="module" src="http://localhost:5173/@vite/client"></script>
 <script type="module" src="http://localhost:5173/src/main.tsx"></script>
 `;
@@ -19,23 +14,25 @@ const server = Bun.serve({
   port: 3000,
   async fetch(req) {
     const path = new URL(req.url).pathname;
-    const isIndex = path === "/";
-    if (isIndex) {
-      const file = Bun.file("web/index.html");
-      const html = await file.text();
+    if (path.startsWith("/api")) {
+      const [handlerName, ...params] = path.split("/api/")[1].split("/");
+      if (handlerName === "echo") {
+        return echoHandler(req, params[0]);
+      } else {
+        return new Response("Not found", { status: 404 });
+      }
+    }
 
+    const resp = await fetch(`http://localhost:5173${path}`);
+    if (path === "/") {
+      const html = await resp.text();
       return new Response(insertBeforeBodyEnd(html, devServerIntegration), {
         headers: {
-          "content-type": "text/html; charset=utf-8",
+          "content-type": "text/html",
         },
       });
     } else {
-      const file = Bun.file(path);
-      if (!(await file.exists())) {
-        return new Response("Not found", { status: 404 });
-      }
-
-      return new Response(file);
+      return resp;
     }
   },
 });
