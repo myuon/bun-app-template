@@ -2,8 +2,27 @@ import { echoHandler } from "./api/echo";
 
 const devServerIntegration = `
 <!-- 開発環境 -->
+<script type="module">
+  import RefreshRuntime from 'http://localhost:5173/@react-refresh'
+  RefreshRuntime.injectIntoGlobalHook(window)
+  window.$RefreshReg$ = () => {}
+  window.$RefreshSig$ = () => (type) => type
+  window.__vite_plugin_react_preamble_installed__ = true
+</script>
 <script type="module" src="http://localhost:5173/@vite/client"></script>
 <script type="module" src="http://localhost:5173/src/main.tsx"></script>
+`;
+const html = `
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
 `;
 
 const insertBeforeBodyEnd = (html: string, content: string) => {
@@ -23,17 +42,20 @@ const server = Bun.serve({
       }
     }
 
-    const resp = await fetch(`http://localhost:5173${path}`);
     if (path === "/") {
-      const html = await resp.text();
       return new Response(insertBeforeBodyEnd(html, devServerIntegration), {
         headers: {
           "content-type": "text/html",
         },
       });
-    } else {
-      return resp;
     }
+
+    return new Response(null, {
+      status: 301,
+      headers: {
+        location: `http://localhost:5173${path}`,
+      },
+    });
   },
 });
 
